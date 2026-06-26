@@ -4,18 +4,28 @@
 
 组织稳定性评分口径见 [组织稳定性评估标准](./docs/organization-stability-scoring.md)。
 
-## 获取项目
+## 前置依赖
 
-```bash
-git clone https://github.com/keeshow/org-radar.git
-cd org-radar
-```
+运行 OrgRadar 需要：
+
+- Node.js 20 或 22 及以上版本
+- npm 10 及以上版本
+- dws (dingding-workspace-cli) 已安装并完成钉钉授权
+
+
+OrgRadar 依赖 `dws` 读取钉钉通讯录。安装 OrgRadar 前，请先完成 dws 安装、登录授权和通讯录权限检查，可参考 [dws 前置依赖](./docs/dws-prerequisites.md)。
 
 ## 快速安装
+
+拉取项目
+```bash
+git clone https://github.com/keeshow/org-radar.git
+```
 
 在项目根目录执行：
 
 ```bash
+cd org-radar/
 ./deploy/install-service.sh
 ```
 脚本会自动完成安装和启动服务。
@@ -24,9 +34,7 @@ cd org-radar
 
 ## 配置
 
-```bash
-.env
-```
+项目配置文件为`.env`
 
 常用配置：
 
@@ -132,10 +140,6 @@ SERVICE_NAME=my-org-radar ./deploy/install-service.sh
 ```bash
 SERVICE_NAME=my-org-radar ./deploy/uninstall-service.sh
 ```
-
-## 不应提交的数据
-
-`data/`、`.env`、`node_modules/`、构建产物和本地运行日志都已加入 `.gitignore`。通讯录数据和权限码不要提交到公开仓库。
 
 ## 开源协议
 
