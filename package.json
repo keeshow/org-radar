@@ -1,0 +1,16 @@
+{
+  "name": "org-radar",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:web\"",
+    "dev:server": "npm run dev --prefix apps/server",
+    "dev:web": "npm run dev --prefix apps/web",
+    "build": "npm run build --prefix apps/server && npm run build --prefix apps/web",
+    "start": "npm run start --prefix apps/server",
+    "install:all": "npm install && npm install --prefix apps/server && npm install --prefix apps/web"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

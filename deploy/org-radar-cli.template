@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SERVICE_NAME="__SERVICE_NAME__"
+PROJECT_DIR="__PROJECT_DIR__"
+PRIMARY_COMMAND="__PRIMARY_COMMAND__"
+ALIAS_COMMAND="__ALIAS_COMMAND__"
+
+usage() {
+  cat <<USAGE
+OrgRadar service manager
+
+Usage:
+  or <command>
+
+Commands:
+  start       Start the systemd service
+  restart     Restart the systemd service
+  stop        Stop the systemd service
+  enable      Enable autostart on boot
+  disable     Disable autostart on boot
+  status      Show service status
+  logs        Follow service logs
+  uninstall   Stop service, remove systemd unit and CLI commands
+  help        Show this help
+
+Install is intentionally not supported here. Run ./deploy/install-service.sh from the project directory instead.
+USAGE
+}
+
+command="${1:-help}"
+
+case "${command}" in
+  start|restart|stop|enable|disable|status)
+    sudo systemctl "${command}" "${SERVICE_NAME}"
+    ;;
+  logs)
+    sudo journalctl -u "${SERVICE_NAME}" -f
+    ;;
+  uninstall)
+    if [[ -x "${PROJECT_DIR}/deploy/uninstall-service.sh" ]]; then
+      SERVICE_NAME="${SERVICE_NAME}" "${PROJECT_DIR}/deploy/uninstall-service.sh"
+    else
+      sudo systemctl disable --now "${SERVICE_NAME}" 2>/dev/null || true
+      sudo rm -f "/etc/systemd/system/${SERVICE_NAME}.service"
+      sudo systemctl daemon-reload
+      sudo rm -f "${PRIMARY_COMMAND}" "${ALIAS_COMMAND}"
+      echo "Uninstalled ${SERVICE_NAME}."
+    fi
+    ;;
+  help|-h|--help)
+    usage
+    ;;
+  install)
+    echo "The 'install' command is not available here." >&2
+    echo "Run ./deploy/install-service.sh from the project directory instead." >&2
+    exit 1
+    ;;
+  *)
+    echo "Unknown command: ${command}" >&2
+    usage >&2
+    exit 1
+    ;;
+esac

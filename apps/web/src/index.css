@@ -1,0 +1,535 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --bg: #f1f5f9;
+  --surface: #ffffff;
+  --surface-subtle: #f8fafc;
+  --border: #d8e1ec;
+  --sidebar-bg: #111827;
+  --sidebar-active: #1f2937;
+  --sidebar-hover: #273449;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-soft: #eff6ff;
+  --primary-border: #bfdbfe;
+  --chart-fill: rgba(37, 99, 235, 0.08);
+  --success: #10b981;
+  --success-soft: #ecfdf5;
+  --danger: #e11d48;
+  --danger-soft: #fff1f2;
+  --warning: #f59e0b;
+  --warning-soft: #fffbeb;
+  --text-main: #111827;
+  --text-sub: #64748b;
+  --text-muted: #94a3b8;
+  --text-inverse: #f9fafb;
+}
+
+.dark {
+  color-scheme: dark;
+  --bg: #08111f;
+  --surface: #111c2e;
+  --surface-subtle: #16243a;
+  --border: #2b3a52;
+  --sidebar-bg: #070d19;
+  --sidebar-active: #1e293b;
+  --sidebar-hover: #253449;
+  --primary: #60a5fa;
+  --primary-hover: #93c5fd;
+  --primary-soft: rgba(96, 165, 250, 0.14);
+  --primary-border: rgba(96, 165, 250, 0.32);
+  --chart-fill: rgba(96, 165, 250, 0.1);
+  --success: #34d399;
+  --success-soft: rgba(52, 211, 153, 0.14);
+  --danger: #fb7185;
+  --danger-soft: rgba(251, 113, 133, 0.14);
+  --warning: #fbbf24;
+  --warning-soft: rgba(251, 191, 36, 0.14);
+  --text-main: #e5e7eb;
+  --text-sub: #a3aec2;
+  --text-muted: #718096;
+  --text-inverse: #0b1220;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--bg);
+  color: var(--text-main);
+}
+
+@layer components {
+  .app-shell {
+    background: var(--bg);
+    color: var(--text-main);
+  }
+
+  .surface {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+
+  .dark .surface {
+    box-shadow: none;
+  }
+
+  .signal-panel {
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--surface-subtle) 46%, transparent), transparent 42%),
+      var(--surface);
+  }
+
+  .panel-header {
+    background: color-mix(in srgb, var(--surface-subtle) 62%, transparent);
+    border-color: var(--border);
+  }
+
+  .metric-strip {
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--primary-soft) 55%, transparent), transparent 34%),
+      var(--surface);
+  }
+
+  .surface-subtle {
+    background: var(--surface-subtle);
+    border-color: var(--border);
+  }
+
+  .divider {
+    border-color: var(--border);
+  }
+
+  .divide-y > :not([hidden]) ~ :not([hidden]),
+  .divide-x > :not([hidden]) ~ :not([hidden]) {
+    border-color: var(--border);
+  }
+
+  .hover-surface {
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+  }
+
+  .hover-surface:hover {
+    background: var(--surface-subtle);
+  }
+
+  .section-title {
+    @apply text-sm font-semibold;
+    color: var(--text-main);
+  }
+
+  .section-kicker {
+    @apply text-[11px] font-medium uppercase;
+    color: var(--text-muted);
+  }
+
+  .muted {
+    color: var(--text-sub);
+  }
+
+  .control {
+    @apply rounded-md border outline-none transition-colors;
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--text-main);
+  }
+
+  .control::placeholder {
+    color: var(--text-muted);
+  }
+
+  .control:focus {
+    border-color: var(--primary-border);
+    box-shadow: 0 0 0 3px var(--primary-soft);
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-55;
+    background: var(--primary);
+    color: var(--text-inverse);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--primary-hover);
+  }
+
+  .link-primary {
+    color: var(--primary);
+  }
+
+  .link-primary:hover {
+    color: var(--primary-hover);
+  }
+
+  .segmented {
+    @apply inline-flex rounded-md border p-0.5;
+    background: var(--surface-subtle);
+    border-color: var(--border);
+  }
+
+  .segmented-item {
+    @apply rounded text-xs font-medium transition-colors;
+    color: var(--text-sub);
+  }
+
+  .segmented-item-active {
+    background: var(--primary-soft);
+    border: 1px solid var(--primary-border);
+    color: var(--primary);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  }
+
+  .status-pill {
+    @apply inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-medium whitespace-nowrap;
+  }
+
+  .event-pill {
+    @apply inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold leading-5 whitespace-nowrap;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
+  }
+
+  .status-success {
+    background: var(--success-soft);
+    border-color: color-mix(in srgb, var(--success) 24%, transparent);
+    color: var(--success);
+  }
+
+  .status-danger {
+    background: var(--danger-soft);
+    border-color: color-mix(in srgb, var(--danger) 24%, transparent);
+    color: var(--danger);
+  }
+
+  .status-warning {
+    background: var(--warning-soft);
+    border-color: color-mix(in srgb, var(--warning) 24%, transparent);
+    color: var(--warning);
+  }
+
+  .status-primary {
+    background: var(--primary-soft);
+    border-color: var(--primary-border);
+    color: var(--primary);
+  }
+
+  .status-neutral {
+    background: var(--surface-subtle);
+    border-color: var(--border);
+    color: var(--text-sub);
+  }
+
+  .sync-radar-backdrop {
+    position: fixed;
+    inset: 64px 0 0 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateX(20px);
+    transition: opacity 420ms ease, transform 420ms ease;
+  }
+
+  .sync-radar-backdrop.is-active {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .auth-screen {
+    background:
+      radial-gradient(circle at 52% 22%, rgba(37, 99, 235, 0.18), transparent 34%),
+      radial-gradient(circle at 72% 58%, rgba(96, 165, 250, 0.10), transparent 38%),
+      linear-gradient(180deg, #07111f 0%, #050b16 100%);
+  }
+
+  .auth-screen-vignette {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at center, transparent 0 34%, rgba(3, 7, 18, 0.22) 62%, rgba(3, 7, 18, 0.54) 100%),
+      linear-gradient(180deg, rgba(3, 7, 18, 0.10), rgba(3, 7, 18, 0.48));
+  }
+
+  .sync-radar-backdrop-auth {
+    inset: 0;
+    z-index: 0;
+    opacity: 0;
+    transform: none;
+  }
+
+  .sync-radar-backdrop-auth.is-active {
+    opacity: 1;
+  }
+
+  .sync-radar-backdrop-auth .sync-radar-field {
+    right: 50%;
+    top: 50%;
+    width: clamp(620px, min(76vw, calc(100vh - 112px)), 1180px);
+    opacity: 0.46;
+    transform: translate(50%, -50%);
+    background:
+      radial-gradient(circle at center, rgba(96, 165, 250, 0.74) 0 2px, transparent 3px),
+      repeating-radial-gradient(circle at center, transparent 0 96px, rgba(96, 165, 250, 0.17) 97px 98px, transparent 99px 192px),
+      linear-gradient(90deg, transparent calc(50% - .5px), rgba(96, 165, 250, 0.12) 50%, transparent calc(50% + .5px)),
+      linear-gradient(0deg, transparent calc(50% - .5px), rgba(96, 165, 250, 0.12) 50%, transparent calc(50% + .5px));
+  }
+
+  .auth-card {
+    border: 1px solid rgba(148, 163, 184, 0.26);
+    background:
+      linear-gradient(180deg, rgba(17, 28, 46, 0.82), rgba(11, 18, 32, 0.76));
+    box-shadow: 0 28px 80px rgba(2, 6, 23, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(18px);
+  }
+
+  .auth-icon {
+    color: #bfdbfe;
+    background: rgba(96, 165, 250, 0.16);
+    border: 1px solid rgba(147, 197, 253, 0.34);
+    box-shadow: 0 0 28px rgba(96, 165, 250, 0.14);
+  }
+
+  .auth-title {
+    display: -webkit-box;
+    max-width: 270px;
+    line-height: 1.45;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .sidebar-brand-title {
+    display: -webkit-box;
+    max-width: 148px;
+    line-height: 1.35;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .auth-label {
+    color: #a3aec2;
+  }
+
+  .auth-input {
+    color: #e5e7eb;
+    background: rgba(24, 36, 58, 0.82);
+    border-color: rgba(148, 163, 184, 0.34);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  }
+
+  .auth-input:focus {
+    border-color: rgba(96, 165, 250, 0.78);
+    background: rgba(30, 45, 70, 0.9);
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .auth-input.is-error {
+    border-color: rgba(251, 113, 133, 0.82);
+    box-shadow: 0 0 0 3px rgba(251, 113, 133, 0.13);
+  }
+
+  .auth-error {
+    color: #fda4af;
+  }
+
+  .auth-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #f8fafc;
+    background: linear-gradient(180deg, #3b82f6, #2563eb);
+    box-shadow: 0 12px 30px rgba(37, 99, 235, 0.28);
+    transition: transform 150ms ease, background 150ms ease, box-shadow 150ms ease, color 150ms ease;
+  }
+
+  .auth-submit:hover:not(:disabled) {
+    background: linear-gradient(180deg, #60a5fa, #2563eb);
+    box-shadow: 0 14px 34px rgba(37, 99, 235, 0.34);
+  }
+
+  .auth-submit:active:not(:disabled) {
+    transform: translateY(1px);
+    background: linear-gradient(180deg, #2563eb, #1d4ed8);
+  }
+
+  .auth-submit:disabled {
+    cursor: not-allowed;
+    color: rgba(203, 213, 225, 0.62);
+    background: rgba(51, 65, 85, 0.72);
+    box-shadow: none;
+  }
+
+  .sync-scanning .surface {
+    background: color-mix(in srgb, var(--surface) 38%, transparent);
+    box-shadow: none;
+    backdrop-filter: blur(2px);
+    transition: background-color 360ms ease, box-shadow 360ms ease, border-color 360ms ease, backdrop-filter 360ms ease;
+  }
+
+  .sync-scanning .signal-panel {
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--surface-subtle) 20%, transparent), transparent 42%),
+      color-mix(in srgb, var(--surface) 34%, transparent);
+  }
+
+  .sync-scanning .metric-strip {
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--primary-soft) 22%, transparent), transparent 34%),
+      color-mix(in srgb, var(--surface) 34%, transparent);
+  }
+
+  .sync-scanning .panel-header,
+  .sync-scanning .surface-subtle {
+    background: color-mix(in srgb, var(--surface-subtle) 32%, transparent);
+  }
+
+  .sync-scanning .control,
+  .sync-scanning .segmented,
+  .sync-scanning .status-primary,
+  .sync-scanning .status-neutral {
+    background: color-mix(in srgb, var(--surface) 42%, transparent);
+    backdrop-filter: blur(2px);
+  }
+
+  .sync-scanning [style*="var(--surface)"],
+  .sync-scanning [style*="var(--surface-subtle)"] {
+    background: color-mix(in srgb, var(--surface) 38%, transparent) !important;
+  }
+
+  .sync-scanning header {
+    background: color-mix(in srgb, var(--bg) 62%, transparent) !important;
+    backdrop-filter: blur(8px);
+  }
+
+  .sync-radar-field {
+    position: absolute;
+    right: clamp(-280px, -14vw, -120px);
+    top: clamp(40px, 14vh, 160px);
+    width: clamp(520px, 62vw, 920px);
+    aspect-ratio: 1;
+    border-radius: 999px;
+    opacity: 0.72;
+    background:
+      radial-gradient(circle at center, color-mix(in srgb, var(--primary) 12%, transparent) 0 2px, transparent 3px),
+      repeating-radial-gradient(circle at center, transparent 0 88px, color-mix(in srgb, var(--primary) 18%, transparent) 89px 90px, transparent 91px 176px),
+      linear-gradient(90deg, transparent calc(50% - .5px), color-mix(in srgb, var(--primary) 14%, transparent) 50%, transparent calc(50% + .5px)),
+      linear-gradient(0deg, transparent calc(50% - .5px), color-mix(in srgb, var(--primary) 14%, transparent) 50%, transparent calc(50% + .5px));
+    filter: saturate(1.05);
+  }
+
+  .sync-radar-grid {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--primary) 8%, transparent),
+      0 0 46px color-mix(in srgb, var(--primary) 10%, transparent);
+  }
+
+  .sync-radar-sweep {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+      conic-gradient(from 0deg at 50% 50%,
+        color-mix(in srgb, var(--primary) 34%, transparent) 0deg,
+        color-mix(in srgb, var(--primary) 14%, transparent) 28deg,
+        transparent 62deg,
+        transparent 360deg);
+    mask: radial-gradient(circle at center, transparent 0 6%, #000 7% 72%, transparent 73%);
+    animation: radar-sweep 3.8s linear infinite;
+    transform-origin: center;
+  }
+
+  .sync-radar-core {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--primary);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--primary) 12%, transparent), 0 0 28px color-mix(in srgb, var(--primary) 34%, transparent);
+    transform: translate(-50%, -50%);
+  }
+
+  .sync-radar-dot {
+    position: absolute;
+    border-radius: 999px;
+    background: var(--primary);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 12%, transparent), 0 0 16px color-mix(in srgb, var(--primary) 30%, transparent);
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    animation: radar-dot 5.8s ease-in-out infinite;
+  }
+
+  .dark .sync-radar-field {
+    opacity: 0.56;
+  }
+
+  @media (max-width: 900px) {
+    .sync-radar-backdrop {
+      left: 0;
+    }
+
+    .sync-radar-field {
+      right: -360px;
+      top: 18vh;
+      width: 660px;
+    }
+
+    .sync-radar-backdrop-auth .sync-radar-field {
+      right: 48%;
+      top: 50%;
+      width: min(760px, 118vw, calc(100vh - 72px));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sync-radar-sweep,
+    .sync-radar-dot {
+      animation: none;
+    }
+
+    .sync-radar-dot {
+      opacity: .45;
+    }
+  }
+}
+
+@keyframes radar-sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes radar-dot {
+  0%, 68%, 100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(.72);
+  }
+  10%, 24% {
+    opacity: .85;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  38% {
+    opacity: .24;
+    transform: translate(-50%, -50%) scale(.86);
+  }
+}

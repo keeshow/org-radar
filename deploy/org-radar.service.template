@@ -1,0 +1,23 @@
+[Unit]
+Description=OrgRadar
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__SERVICE_USER__
+Group=__SERVICE_GROUP__
+WorkingDirectory=__PROJECT_DIR__
+Environment=HOME=__USER_HOME__
+Environment=PATH=__PATH__
+EnvironmentFile=__ENV_FILE__
+ExecStart=__NPM_BIN__ run dev
+Restart=always
+RestartSec=5
+KillSignal=SIGINT
+TimeoutStopSec=20
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
