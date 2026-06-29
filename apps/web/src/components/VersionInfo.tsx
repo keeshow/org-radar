@@ -19,14 +19,20 @@ export default function VersionInfo() {
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/20 dark:bg-black/50" onClick={() => setOpen(false)} />
-          <div className="surface relative w-80 overflow-hidden text-left">
-            <div className="px-5 py-3 border-b divider flex items-center justify-between">
+          <div className="surface relative flex h-[500px] max-h-[calc(100vh-32px)] w-[390px] max-w-[calc(100vw-32px)] flex-col overflow-hidden text-left">
+            <div className="shrink-0 px-5 py-3 border-b divider flex items-center justify-between">
               <h4 className="section-title">更新日志</h4>
-              <button onClick={() => setOpen(false)} className="p-0.5 rounded-lg hover-surface" style={{ color: 'var(--text-muted)' }}>
+              <button
+                onClick={() => setOpen(false)}
+                className="p-0.5 rounded-lg hover-surface"
+                style={{ color: 'var(--text-muted)' }}
+                title="关闭"
+                aria-label="关闭更新日志"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="p-4 space-y-3">
+            <div className="min-h-0 flex-1 overflow-y-auto p-4 space-y-3" style={{ scrollbarGutter: 'stable' }}>
               {changelog.map((entry) => (
                 <div key={entry.version}>
                   <div className="flex items-center gap-2 mb-1">

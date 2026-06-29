@@ -190,7 +190,9 @@ export async function runSync(reportProgress?: SyncProgressReporter): Promise<Sy
       for (const user of userDetails) {
         const emp = (user.orgEmployeeModel || user.employeeModel || user) as Record<string, unknown>;
         const uid = (emp.orgUserId || user.orgUserId || user.userId || user.user_id) as string;
-        if (!uid) continue;
+        if (!uid) {
+          throw new Error('人员详情缺少用户 ID，同步数据不完整');
+        }
 
         const depts = (emp.depts || user.depts || []) as Array<{
           deptId?: string | number;
@@ -209,7 +211,10 @@ export async function runSync(reportProgress?: SyncProgressReporter): Promise<Sy
           };
         }).filter((d) => d.deptId !== '1' && deptPathMap.has(d.deptId));
 
-        if (deptList.length === 0) continue;
+        if (deptList.length === 0) {
+          const personName = (emp.orgUserName || user.orgUserName || user.name || user.userName || uid) as string;
+          throw new Error(`${personName} 缺少有效部门归属，同步数据不完整`);
+        }
 
         allCurrentUserIds.add(uid);
 

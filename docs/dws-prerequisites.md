@@ -117,7 +117,7 @@ dws auth login --device
 先确认能读取根部门下的一级部门：
 
 ```bash
-dws contact dept list-children --id 1 --format json
+dws contact dept list-children --dept 1 --format json
 ```
 
 正常情况下应返回 `success: true`，并包含部门列表。
@@ -125,7 +125,7 @@ dws contact dept list-children --id 1 --format json
 再选择上一步返回的某个 `deptId`，检查部门成员读取：
 
 ```bash
-dws contact dept list-members --ids <deptId> --format json
+dws contact dept list-members --depts <deptId> --format json
 ```
 
 如果返回了成员列表，再取其中的 `userId` 检查用户详情：

@@ -63,11 +63,11 @@ export async function fetchAllDepartments(progress?: DwsProgressReporter): Promi
   progress?.('正在读取根部门');
   const rootChildren = await runDws([
     'contact', 'dept', 'list-children',
-    '--id', '1',
+    '--dept', '1',
     '--format', 'json',
   ]) as { success: boolean; result?: DeptChild[] };
 
-  if (!rootChildren.success || !rootChildren.result) {
+  if (!rootChildren.success || !Array.isArray(rootChildren.result)) {
     throw new Error('获取根部门子部门失败');
   }
 
@@ -107,86 +107,77 @@ async function buildDeptTree(
     children: [],
   };
 
-  try {
-    const children = await runDws([
-      'contact', 'dept', 'list-children',
-      '--id', deptId,
-      '--format', 'json',
-    ]) as { success: boolean; result?: DeptChild[] };
+  const children = await runDws([
+    'contact', 'dept', 'list-children',
+    '--dept', deptId,
+    '--format', 'json',
+  ]) as { success: boolean; result?: DeptChild[] };
 
-    if (children.success && children.result && children.result.length > 0) {
-      for (const child of children.result) {
-        const childId = cleanDeptId(child.deptId);
-        const childName = child.deptName || '';
-        const childDept = await buildDeptTree(childId, childName, deptId, currentPath, progress);
-        dept.children.push(childDept);
-      }
-    }
-  } catch (err) {
-    console.log(`[dws] 获取子部门失败 dept=${deptId}: ${String(err).slice(0, 80)}`);
+  if (!children.success || !Array.isArray(children.result)) {
+    throw new Error(`获取子部门失败：${currentPath} (${deptId})`);
   }
 
-  try {
-    const members = await runDws([
-      'contact', 'dept', 'list-members',
-      '--ids', deptId,
-      '--format', 'json',
-    ], 2) as { success: boolean; deptUserList?: { userInfo?: { userId?: string } }[] };
-
-    if (members.success && members.deptUserList) {
-      dept.memberCount = members.deptUserList.length;
+  for (const child of children.result) {
+    const childId = cleanDeptId(child.deptId);
+    const childName = child.deptName || '';
+    if (!childId || !childName) {
+      throw new Error(`部门树数据不完整：${currentPath} 下存在无效子部门`);
     }
-  } catch (err) {
-    console.log(`[dws] 获取部门成员数失败 dept=${deptId}: ${String(err).slice(0, 80)}`);
+    const childDept = await buildDeptTree(childId, childName, deptId, currentPath, progress);
+    dept.children.push(childDept);
   }
 
   return dept;
 }
 
 export async function fetchDeptMembers(deptId: string): Promise<string[]> {
-  try {
-    const result = await runDws([
-      'contact', 'dept', 'list-members',
-      '--ids', deptId,
-      '--format', 'json',
-    ], 2) as { success: boolean; deptUserList?: { userInfo?: { userId?: string } }[] };
+  const result = await runDws([
+    'contact', 'dept', 'list-members',
+    '--depts', deptId,
+    '--format', 'json',
+  ], 2) as { success: boolean; deptUserList?: { userInfo?: { userId?: string } }[] };
 
-    if (!result.success || !result.deptUserList) {
-      return [];
-    }
-
-    const userIds = result.deptUserList
-      .map((m) => m.userInfo?.userId)
-      .filter(Boolean) as string[];
-    return userIds;
-  } catch (err) {
-    console.log(`[dws] 获取部门成员失败 dept=${deptId}: ${String(err).slice(0, 80)}`);
-    return [];
+  if (!result.success || !Array.isArray(result.deptUserList)) {
+    throw new Error(`获取部门成员失败：dept=${deptId}`);
   }
+
+  const userIds = result.deptUserList
+    .map((member) => member.userInfo?.userId)
+    .filter(Boolean) as string[];
+
+  if (userIds.length !== result.deptUserList.length) {
+    throw new Error(`部门成员数据不完整：dept=${deptId}`);
+  }
+
+  return userIds;
 }
 
 export async function batchGetUserDetails(userIds: string[], progress?: DwsProgressReporter): Promise<Record<string, unknown>[]> {
   if (userIds.length === 0) return [];
 
-  const batchSize = 50;
+  const batchSize = 30;
   const allResults: Record<string, unknown>[] = [];
 
   for (let i = 0; i < userIds.length; i += batchSize) {
     const batch = userIds.slice(i, i + batchSize);
     progress?.(`正在获取人员详情：${Math.min(i + batch.length, userIds.length)}/${userIds.length}`);
-    try {
-      const result = await runDws([
-        'contact', 'user', 'get',
-        '--ids', batch.join(','),
-        '--format', 'json',
-      ]) as { success: boolean; result?: Record<string, unknown>[] };
+    const result = await runDws([
+      'contact', 'user', 'get',
+      '--ids', batch.join(','),
+      '--format', 'json',
+    ]) as { success: boolean; result?: Record<string, unknown>[] };
 
-      if (result.success && result.result) {
-        allResults.push(...result.result);
-      }
-    } catch (err) {
-      console.log(`[dws] 批量获取用户详情失败 (batch ${i}-${i + batch.length}): ${String(err).slice(0, 80)}`);
+    if (!result.success || !Array.isArray(result.result)) {
+      throw new Error(`批量获取人员详情失败：${i + 1}-${i + batch.length}`);
     }
+
+    const returnedIds = new Set(result.result.map(getUserId).filter(Boolean));
+    const missingIds = batch.filter((userId) => !returnedIds.has(userId));
+    if (missingIds.length > 0) {
+      throw new Error(`人员详情返回不完整：缺少 ${missingIds.length} 人`);
+    }
+
+    allResults.push(...result.result);
   }
 
   return allResults;
@@ -205,6 +196,7 @@ export async function collectAllDeptMembers(depts: DeptInfo[], progress?: DwsPro
     }
 
     const members = await fetchDeptMembers(dept.deptId);
+    dept.memberCount = members.length;
     for (const uid of members) {
       allUserIds.add(uid);
     }
@@ -255,6 +247,12 @@ type DwsProgressReporter = (message: string) => void;
 function cleanDeptId(id: string | number | undefined): string {
   if (id === undefined || id === null) return '';
   return String(parseInt(String(id), 10));
+}
+
+function getUserId(user: Record<string, unknown>): string {
+  const employee = (user.orgEmployeeModel || user.employeeModel || user) as Record<string, unknown>;
+  const value = employee.orgUserId || user.orgUserId || user.userId || user.user_id;
+  return value === undefined || value === null ? '' : String(value);
 }
 
 export interface AisearchEnrichment {

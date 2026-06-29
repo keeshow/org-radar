@@ -18,6 +18,8 @@ import { api } from '../api';
 import type { ChangeEvent, DepartmentHealth, OrganizationHealth, Overview, SyncStatus } from '../types';
 import PersonDrawer from '../components/PersonDrawer';
 
+const RECENT_CHANGE_LIMIT = 5;
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const [data, setData] = useState<Overview | null>(null);
@@ -168,11 +170,11 @@ export default function Dashboard() {
           <div className="flex-1">
             {data.recentChanges.length === 0 ? (
               <div className="h-full min-h-60 flex items-center justify-center text-sm" style={{ color: 'var(--text-muted)' }}>暂无人员变化</div>
-            ) : data.recentChanges.slice(0, 8).map((change, index) => (
+            ) : data.recentChanges.slice(0, RECENT_CHANGE_LIMIT).map((change, index) => (
               <IntelligenceEvent
                 key={change.id}
                 change={change}
-                last={index === Math.min(data.recentChanges.length, 8) - 1}
+                last={index === Math.min(data.recentChanges.length, RECENT_CHANGE_LIMIT) - 1}
                 onClick={() => setSelectedPerson(change.userId)}
               />
             ))}

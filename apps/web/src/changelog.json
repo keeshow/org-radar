@@ -1,4 +1,5 @@
 [
+  { "version": "1.1.2", "date": "2026-06-29", "summary": "增加同步完整性保护" },
   { "version": "1.1.1", "date": "2026-06-24", "summary": "UI 调整" },
   { "version": "1.1.0", "date": "2026-06-22", "summary": "UI 重构" },
   { "version": "1.0.1", "date": "2026-06-22", "summary": "去除了无部门人员" },
