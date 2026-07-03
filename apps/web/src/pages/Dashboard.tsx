@@ -5,10 +5,7 @@ import {
   ArrowUpRight,
   Building2,
   CalendarDays,
-  CircleAlert,
-  HeartPulse,
   Radar,
-  Sparkles,
   TrendingUp,
   UserMinus,
   UserPlus,
@@ -71,7 +68,6 @@ export default function Dashboard() {
   if (error) return <ErrorState message={error} onRetry={load} />;
   if (!data || !health) return <ErrorState message="暂无组织数据" onRetry={load} />;
 
-  const brief = buildBrief(data, health, departments);
   const focusDepartments = [...departments]
     .sort((a, b) => b.riskScore - a.riskScore || b.removedCount - a.removedCount)
     .slice(0, 6);
@@ -90,20 +86,6 @@ export default function Dashboard() {
           />
           <StatusMetric icon={<TrendingUp />} label="最近同步" value={formatDateTime(data.lastSyncAt)} />
           <StatusMetric icon={<CalendarDays />} label="统计开始" value={formatDateTime(data.trackingStartedAt)} />
-        </div>
-      </section>
-
-      <section className="surface relative overflow-hidden px-5 py-4 border-l-4" style={{ borderLeftColor: 'var(--primary)' }}>
-        <div className="flex items-start gap-3">
-          <div className="mt-0.5 w-8 h-8 rounded-md border flex items-center justify-center shrink-0" style={{ background: 'var(--primary-soft)', borderColor: 'var(--primary-border)' }}>
-            <Sparkles className="w-4 h-4" style={{ color: 'var(--primary)' }} />
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h2 className="section-title">今日组织简报</h2>
-            </div>
-            <p className="text-sm leading-6 muted">{brief}</p>
-          </div>
         </div>
       </section>
 
@@ -210,18 +192,6 @@ export default function Dashboard() {
           ))}
         </div>
       </section>
-
-      {health.alerts.length > 0 && (
-        <section className="rounded-xl border px-5 py-4" style={{ background: 'var(--warning-soft)', borderColor: 'color-mix(in srgb, var(--warning) 24%, transparent)' }}>
-          <div className="flex items-start gap-3">
-            <CircleAlert className="w-4 h-4 mt-0.5 shrink-0" style={{ color: 'var(--warning)' }} />
-            <div>
-              <h2 className="text-sm font-semibold" style={{ color: 'var(--text-main)' }}>需要关注</h2>
-              <p className="mt-1 text-sm muted">{health.alerts.slice(0, 4).map(formatAlertText).join('；')}</p>
-            </div>
-          </div>
-        </section>
-      )}
 
       {selectedPerson && <PersonDrawer userId={selectedPerson} onClose={() => setSelectedPerson(null)} />}
     </div>
@@ -333,24 +303,6 @@ function DepartmentStatus({ department }: { department: DepartmentHealth }) {
   return <span className={`status-pill ${state.className}`}>{state.label}</span>;
 }
 
-function buildBrief(data: Overview, health: OrganizationHealth, departments: DepartmentHealth[]) {
-  const day = `过去 24 小时新增 ${data.recentAdded} 人，${data.recentRemoved > 0 ? `离职 ${data.recentRemoved} 人` : '暂无离职'}`;
-  const focus = selectFocusDepartment(departments);
-  if (focus) {
-    const movement = focus.removedCount > 0
-      ? `离职 ${focus.removedCount} 人，净变化 ${signed(focus.netChange)}`
-      : `发生 ${focus.departmentChangedCount + focus.titleChangedCount} 次组织变化`;
-    return `${day}。${focus.deptName}近 30 天${movement}，建议观察其人员流动。整体组织稳定性评分 ${health.score}/100。`;
-  }
-  return `${day}。近 30 天组织净变化 ${signed(health.metrics.netChange)} 人，整体运行${health.level === 'stable' ? '稳定' : '需要持续观察'}，稳定性评分 ${health.score}/100。`;
-}
-
-function selectFocusDepartment(departments: DepartmentHealth[]) {
-  return [...departments]
-    .filter((department) => department.removedCount > 0 || department.netChange < 0 || department.departmentChangedCount > 0 || department.titleChangedCount > 0)
-    .sort((a, b) => b.removedCount - a.removedCount || a.netChange - b.netChange || b.riskScore - a.riskScore)[0];
-}
-
 function departmentState(department: DepartmentHealth) {
   if (department.tag === '流失关注' || department.tag === '频繁调整') return { label: '波动', className: 'status-danger' };
   if (department.riskScore > 0 || department.tag === '数据不足') return { label: '关注', className: 'status-warning' };
@@ -365,13 +317,6 @@ function eventVisual(type: string) {
     title_changed: { label: '职位变化', action: '更新了职位', dot: 'bg-[var(--warning)] ring-[var(--warning-soft)]', pill: 'status-warning' },
   };
   return map[type] || { label: '信息更新', action: '更新了资料', dot: 'bg-[var(--text-muted)] ring-[var(--surface-subtle)]', pill: 'status-neutral' };
-}
-
-function formatAlertText(alert: OrganizationHealth['alerts'][number]) {
-  const prefix = alert.title ? `${alert.title}：` : '';
-  const dept = alert.deptName ? `（${alert.deptName}）` : '';
-  if (alert.personName) return `${prefix}${alert.personName}${dept} 已从通讯录中移除`;
-  return `${prefix}${alert.reason}`;
 }
 
 function healthText(level: OrganizationHealth['level']) { return level === 'stable' ? '稳定' : level === 'attention' ? '关注' : level === 'volatile' ? '波动' : '风险'; }

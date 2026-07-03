@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Activity, ArrowDown, ArrowUp, Building2, ChevronRight, CircleAlert, Users } from 'lucide-react';
+import { Activity, ArrowDown, ArrowUp, Building2, CircleAlert, Users } from 'lucide-react';
 import { api } from '../api';
 import type { DepartmentHealth as DepartmentHealthType, DepartmentHealthDetail } from '../types';
 import PersonDrawer from '../components/PersonDrawer';
@@ -34,7 +34,6 @@ export default function DepartmentHealth() {
     removed: departments.reduce((sum, department) => sum + department.removedCount, 0),
     changed: departments.reduce((sum, department) => sum + department.departmentChangedCount, 0),
   }), [departments]);
-
   if (loading) return <div className="h-64 flex items-center justify-center text-sm" style={{ color: 'var(--text-muted)' }}>正在生成部门健康报告…</div>;
 
   return (
@@ -64,8 +63,8 @@ export default function DepartmentHealth() {
           </div>
           <div className="overflow-x-auto">
             <div className="min-w-[720px]">
-              <div className="grid grid-cols-[minmax(180px,1.5fr)_80px_72px_72px_80px_80px_90px_24px] px-5 h-10 items-center border-b divider text-[10px] uppercase" style={{ color: 'var(--text-muted)' }}>
-                <span>部门</span><span>人数</span><span>新增</span><span>离职</span><span>净变化</span><span>调整</span><span>状态</span><span />
+              <div className="grid grid-cols-[minmax(180px,1.5fr)_80px_72px_72px_80px_80px_90px] px-5 h-10 items-center border-b divider text-[10px] uppercase" style={{ color: 'var(--text-muted)' }}>
+                <span>部门</span><span>人数</span><span>新增</span><span>离职</span><span>净变化</span><span>调整</span><span>状态</span>
               </div>
               {departments.map((department) => {
                 const state = departmentState(department);
@@ -74,7 +73,9 @@ export default function DepartmentHealth() {
                   <button
                     key={department.deptId}
                     onClick={() => setSelectedId(department.deptId)}
-                    className={`w-full grid grid-cols-[minmax(180px,1.5fr)_80px_72px_72px_80px_80px_90px_24px] px-5 min-h-14 items-center border-b divider text-left transition-colors ${selected ? 'status-primary border-x-0 border-t-0' : 'hover-surface'}`}
+                    aria-pressed={selected}
+                    className={`w-full grid grid-cols-[minmax(180px,1.5fr)_80px_72px_72px_80px_80px_90px] px-5 min-h-14 items-center border-b divider text-left transition-colors ${selected ? 'status-primary border-x-0 border-t-0' : 'hover-surface'}`}
+                    style={selected ? { boxShadow: 'inset 3px 0 var(--primary)' } : undefined}
                   >
                     <span className="text-sm font-medium truncate" style={{ color: 'var(--text-main)' }}>{department.deptName}</span>
                     <span className="text-sm muted">{department.currentPersons}</span>
@@ -83,7 +84,6 @@ export default function DepartmentHealth() {
                     <span className="text-xs" style={{ color: department.netChange < 0 ? 'var(--danger)' : 'var(--success)' }}>{signed(department.netChange)}</span>
                     <span className="text-xs muted">{department.departmentChangedCount}</span>
                     <span><span className={`status-pill ${state.className}`}>{state.label}</span></span>
-                    <ChevronRight className="w-4 h-4" style={{ color: selected ? 'var(--primary)' : 'var(--text-muted)' }} />
                   </button>
                 );
               })}
@@ -91,7 +91,10 @@ export default function DepartmentHealth() {
           </div>
         </section>
 
-        <aside className="surface overflow-hidden xl:sticky xl:top-20">
+        <aside
+          className="surface overflow-hidden xl:sticky xl:top-20 xl:border-l-[3px]"
+          style={{ borderLeftColor: detail ? 'var(--primary)' : 'var(--border)' }}
+        >
           {!detail ? (
             <div className="h-80 flex items-center justify-center text-sm" style={{ color: 'var(--text-muted)' }}>选择部门查看健康详情</div>
           ) : (
@@ -99,6 +102,7 @@ export default function DepartmentHealth() {
               <div className="px-5 py-5 border-b divider">
                 <div className="flex items-start justify-between gap-3">
                   <div>
+                    <p className="mb-1 text-[10px] font-medium" style={{ color: 'var(--primary)' }}>当前查看</p>
                     <h2 className="text-base font-semibold" style={{ color: 'var(--text-main)' }}>{detail.deptName}</h2>
                   </div>
                   <span className={`status-pill ${departmentState(detail).className}`}>{departmentState(detail).label}</span>

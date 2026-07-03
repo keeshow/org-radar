@@ -354,33 +354,38 @@ export async function runSync(reportProgress?: SyncProgressReporter): Promise<Sy
             const curSorted = [...curDepts].sort((a, b) => a.deptId.localeCompare(b.deptId));
             const prevDeptIds = prevSorted.map((d) => d.deptId).join(',');
             const curDeptIds = curSorted.map((d) => d.deptId).join(',');
+            const departmentChanged = prevDeptIds !== curDeptIds;
+            const titleChanged = prev.title !== cur.title;
+            const profileUpdated = prev.profile_hash !== cur.profile_hash;
 
-            if (prevDeptIds !== curDeptIds) {
+            if (departmentChanged) {
               deptChangedCount++;
               const fromPath = prevSorted.map((d) => d.deptPath).join(', ');
               const toPath = curSorted.map((d) => d.deptPath).join(', ');
+              const titleDescription = titleChanged
+                ? `，职位从 ${prev.title || '无'} 变更为 ${cur.title || '无'}`
+                : '';
               insertChangeStmt.run(
                 uuidv4(), 'department_changed', uid, cur.name,
                 syncedAt, syncedAt,
-                prev.departments_json, cur.departments_json, null, null, null,
-                `${cur.name} 从 ${fromPath} 调整到 ${toPath}`,
+                prev.departments_json, cur.departments_json,
+                titleChanged ? prev.title || '' : null,
+                titleChanged ? cur.title || '' : null,
+                titleChanged ? JSON.stringify({ title: { from: prev.title || '', to: cur.title || '' } }) : null,
+                `${cur.name} 从 ${fromPath} 调整到 ${toPath}${titleDescription}`,
                 syncRunId, now,
               );
-            }
-
-            if (prev.title !== cur.title && cur.title) {
+            } else if (titleChanged) {
               titleChangedCount++;
               insertChangeStmt.run(
                 uuidv4(), 'title_changed', uid, cur.name,
                 syncedAt, syncedAt,
-                null, null, prev.title || '', cur.title,
-                JSON.stringify({ title: { from: prev.title, to: cur.title } }),
-                `${cur.name} 职位从 ${prev.title || '无'} 变更为 ${cur.title}`,
+                null, null, prev.title || '', cur.title || '',
+                JSON.stringify({ title: { from: prev.title || '', to: cur.title || '' } }),
+                `${cur.name} 职位从 ${prev.title || '无'} 变更为 ${cur.title || '无'}`,
                 syncRunId, now,
               );
-            }
-
-            if (prev.profile_hash !== cur.profile_hash) {
+            } else if (profileUpdated) {
               profileUpdatedCount++;
               insertChangeStmt.run(
                 uuidv4(), 'profile_updated', uid, cur.name,
