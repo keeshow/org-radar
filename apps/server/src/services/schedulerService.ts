@@ -61,20 +61,32 @@ async function checkIntervalSync(config: SchedulerConfig, now: Date): Promise<vo
   const lastSuccessfulSync = db.prepare(
     "SELECT value FROM app_meta WHERE key = 'last_sync_at'"
   ).get() as { value: string } | undefined;
+  const lastPollSync = db.prepare(
+    "SELECT value FROM app_meta WHERE key = 'last_poll_sync_at'"
+  ).get() as { value: string } | undefined;
 
   const lastSyncTime = lastSuccessfulSync?.value ? Date.parse(lastSuccessfulSync.value) : 0;
-  const elapsedMs = now.getTime() - lastSyncTime;
+  const lastPollTime = lastPollSync?.value ? Date.parse(lastPollSync.value) : 0;
+  const lastReferenceTime = Math.max(lastSyncTime, lastPollTime);
+  const elapsedMs = now.getTime() - lastReferenceTime;
   const intervalMs = Math.max(10, config.intervalMinutes) * 60_000;
 
-  if (lastSyncTime > 0 && elapsedMs < intervalMs) return;
+  if (lastReferenceTime > 0 && elapsedMs < intervalMs) return;
 
   console.log(`[scheduler] 触发轮询同步: 每 ${config.intervalMinutes} 分钟`);
-  await runSchedulerSync();
-  const finishedAt = new Date().toISOString();
   db.prepare(
     "INSERT OR REPLACE INTO app_meta (key, value, updated_at) VALUES ('last_poll_sync_at', ?, ?)"
-  ).run(finishedAt, finishedAt);
-  console.log('[scheduler] 轮询同步完成');
+  ).run(now.toISOString(), now.toISOString());
+
+  try {
+    await runSchedulerSync();
+    console.log('[scheduler] 轮询同步完成');
+  } finally {
+    const finishedAt = new Date().toISOString();
+    db.prepare(
+      "INSERT OR REPLACE INTO app_meta (key, value, updated_at) VALUES ('last_poll_sync_at', ?, ?)"
+    ).run(finishedAt, finishedAt);
+  }
 }
 
 async function runSchedulerSync(): Promise<void> {

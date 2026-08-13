@@ -14,6 +14,7 @@ import {
 import { api } from '../api';
 import type { ChangeEvent, DepartmentHealth, OrganizationHealth, Overview, SyncStatus } from '../types';
 import PersonDrawer from '../components/PersonDrawer';
+import SmoothTrendChart from '../components/SmoothTrendChart';
 
 const RECENT_CHANGE_LIMIT = 5;
 
@@ -71,6 +72,11 @@ export default function Dashboard() {
   const focusDepartments = [...departments]
     .sort((a, b) => b.riskScore - a.riskScore || b.removedCount - a.removedCount)
     .slice(0, 6);
+  const syncMetricValue = syncStatus?.status === 'running'
+    ? `${syncStatus.stageIndex}/${syncStatus.stageTotal}`
+    : syncStatus?.status === 'failed'
+      ? '同步失败'
+      : '数据就绪';
 
   return (
     <div className="space-y-5">
@@ -81,7 +87,7 @@ export default function Dashboard() {
           <StatusMetric
             icon={<Radar />}
             label="同步状态"
-            value={syncStatus?.status === 'running' ? `${syncStatus.stageIndex}/${syncStatus.stageTotal}` : '数据就绪'}
+            value={syncMetricValue}
             tone={syncStatus?.status === 'failed' ? 'red' : syncStatus?.status === 'running' ? 'primary' : 'green'}
           />
           <StatusMetric icon={<TrendingUp />} label="最近同步" value={formatDateTime(data.lastSyncAt)} />
@@ -109,7 +115,10 @@ export default function Dashboard() {
               </div>
               <span className="text-xs" style={{ color: 'var(--text-muted)' }}>共 {health.trend.length} 个变动节点</span>
             </div>
-            <TrendChart points={health.trend.map((point) => ({ label: shortDate(point.syncedAt), value: point.totalPersons }))} />
+            <SmoothTrendChart
+              points={health.trend.map((point) => ({ label: shortDate(point.syncedAt), tooltipLabel: formatEventTime(point.syncedAt), value: point.totalPersons }))}
+              ariaLabel="组织人数趋势图"
+            />
           </div>
 
           <div className="grid md:grid-cols-[280px_1fr] min-h-[270px]">
@@ -215,43 +224,6 @@ function Signal({ label, value, icon, tone }: { label: string; value: number | s
     <div className="flex items-center gap-3">
       <div className="w-8 h-8 rounded-md flex items-center justify-center [&_svg]:w-4 [&_svg]:h-4" style={{ background, color }}>{icon}</div>
       <div><p className="text-xs" style={{ color: 'var(--text-muted)' }}>{label}</p><p className="text-lg font-semibold" style={{ color: 'var(--text-main)' }}>{value}</p></div>
-    </div>
-  );
-}
-
-function TrendChart({ points }: { points: { label: string; value: number }[] }) {
-  if (points.length === 0) return <div className="h-44 flex items-center justify-center text-sm" style={{ color: 'var(--text-muted)' }}>暂无趋势数据</div>;
-  const visible = points.slice(-30);
-  const min = Math.min(...visible.map((point) => point.value));
-  const max = Math.max(...visible.map((point) => point.value));
-  const range = Math.max(1, max - min);
-  const coordinates = visible.map((point, index) => {
-    const x = visible.length === 1 ? 50 : 4 + (index / (visible.length - 1)) * 92;
-    const y = 84 - ((point.value - min) / range) * 64;
-    return { x, y };
-  });
-  const polyline = coordinates.map(({ x, y }) => `${x},${y}`).join(' ');
-  const area = `4,84 ${polyline} 96,84`;
-  const gradientId = `trend-fill-${visible.length}-${min}-${max}`;
-  return (
-    <div>
-      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-40" role="img" aria-label="组织人数趋势图">
-        <defs>
-          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.12" />
-            <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        {[20, 52, 84].map((y) => <line key={y} x1="0" y1={y} x2="100" y2={y} stroke="var(--border)" strokeWidth="0.35" />)}
-        <polygon points={area} fill={`url(#${gradientId})`} />
-        <polyline points={polyline} fill="none" stroke="var(--primary)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-        {coordinates.map(({ x, y }, index) => {
-          return index === visible.length - 1 ? <circle key={index} cx={x} cy={y} r="1.8" fill="var(--primary)" /> : null;
-        })}
-      </svg>
-      <div className="flex justify-between text-[11px]" style={{ color: 'var(--text-muted)' }}>
-        <span>{visible[0]?.label}</span><span>{min === max ? `${max} 人` : `${min}–${max} 人`}</span><span>{visible[visible.length - 1]?.label}</span>
-      </div>
     </div>
   );
 }

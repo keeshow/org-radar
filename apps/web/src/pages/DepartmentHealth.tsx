@@ -4,6 +4,7 @@ import { Activity, ArrowDown, ArrowUp, Building2, CircleAlert, Users } from 'luc
 import { api } from '../api';
 import type { DepartmentHealth as DepartmentHealthType, DepartmentHealthDetail } from '../types';
 import PersonDrawer from '../components/PersonDrawer';
+import SmoothTrendChart from '../components/SmoothTrendChart';
 
 export default function DepartmentHealth() {
   const [searchParams] = useSearchParams();
@@ -123,7 +124,14 @@ export default function DepartmentHealth() {
 
               <div className="px-5 py-4 border-b divider">
                 <div className="flex items-center gap-2 mb-3"><Users className="w-3.5 h-3.5" style={{ color: 'var(--primary)' }} /><h3 className="text-xs font-medium muted">人数趋势</h3></div>
-                <MiniTrend points={detail.trend.map((point) => point.memberCount)} />
+                <SmoothTrendChart
+                  points={detail.trend.map((point) => ({ label: shortDay(point.syncedAt), tooltipLabel: shortDate(point.syncedAt), value: point.memberCount }))}
+                  maxPoints={24}
+                  heightClassName="h-28"
+                  emptyText="数据积累中"
+                  ariaLabel={`${detail.deptName}人数趋势图`}
+                  compact
+                />
               </div>
 
               <div className="px-5 py-4">
@@ -160,21 +168,6 @@ function DetailSignal({ icon, label, value, tone }: { icon: React.ReactNode; lab
   return <div className="text-center"><div className="mx-auto w-7 h-7 rounded-md flex items-center justify-center [&_svg]:w-3.5 [&_svg]:h-3.5" style={{ background, color }}>{icon}</div><p className="mt-1 text-lg font-semibold" style={{ color: 'var(--text-main)' }}>{value}</p><p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{label}</p></div>;
 }
 
-function MiniTrend({ points }: { points: number[] }) {
-  if (points.length === 0) return <div className="h-20 flex items-center justify-center text-xs" style={{ color: 'var(--text-muted)' }}>数据积累中</div>;
-  const visible = points.slice(-24);
-  const min = Math.min(...visible), max = Math.max(...visible), range = Math.max(1, max - min);
-  const coords = visible.map((value, index) => {
-    const x = visible.length === 1 ? 50 : (index / (visible.length - 1)) * 100;
-    const y = 80 - ((value - min) / range) * 60;
-    return { x, y };
-  });
-  const line = coords.map(({ x, y }) => `${x},${y}`).join(' ');
-  const area = `0,80 ${line} 100,80`;
-  const gradientId = `mini-trend-fill-${visible.length}-${min}-${max}`;
-  return <div><svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-20 w-full"><defs><linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--primary)" stopOpacity="0.12" /><stop offset="100%" stopColor="var(--primary)" stopOpacity="0" /></linearGradient></defs><polygon points={area} fill={`url(#${gradientId})`} /><polyline points={line} fill="none" stroke="var(--primary)" strokeWidth="2" vectorEffect="non-scaling-stroke" /></svg><div className="flex justify-between text-[10px]" style={{ color: 'var(--text-muted)' }}><span>{visible[0]} 人</span><span>{visible[visible.length - 1]} 人</span></div></div>;
-}
-
 function departmentState(department: DepartmentHealthType) {
   if (department.tag === '流失关注' || department.tag === '频繁调整') return { key: 'volatile', label: '波动', className: 'status-danger' };
   if (department.riskScore > 0 || department.tag === '数据不足') return { key: 'attention', label: '关注', className: 'status-warning' };
@@ -182,4 +175,5 @@ function departmentState(department: DepartmentHealthType) {
 }
 
 function signed(value: number) { return `${value >= 0 ? '+' : ''}${value}`; }
+function shortDay(iso: string) { return new Date(iso).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' }); }
 function shortDate(iso: string) { return new Date(iso).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }); }

@@ -19,6 +19,8 @@ export default function Topbar() {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<SyncStatus | null>(null);
   const syncing = status?.status === 'running';
+  const syncLabel = syncing ? status?.stage || '同步中' : status?.status === 'failed' ? '同步失败' : '数据就绪';
+  const syncColor = syncing ? 'var(--primary)' : status?.status === 'failed' ? 'var(--danger)' : 'var(--success)';
   const meta = pageMeta[location.pathname] || pageMeta['/'];
 
   useEffect(() => {
@@ -66,8 +68,8 @@ export default function Topbar() {
         </form>
 
         <div className="hidden sm:flex items-center gap-2 text-xs muted">
-          <span className={`w-2 h-2 rounded-full ${syncing ? 'animate-pulse' : ''}`} style={{ background: syncing ? 'var(--primary)' : status?.status === 'failed' ? 'var(--danger)' : 'var(--success)' }} />
-          <span>{syncing ? status?.stage || '同步中' : '数据就绪'}</span>
+          <span className={`w-2 h-2 rounded-full ${syncing ? 'animate-pulse' : ''}`} style={{ background: syncColor }} />
+          <span>{syncLabel}</span>
         </div>
 
         <button
